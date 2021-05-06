@@ -9,8 +9,10 @@ use crypto::sha1::Sha1;
 const HASH_KEY: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-    println!("Listening on http://localhost:8080");
+    let addr = "127.0.0.1:8080";
+
+    let listener = TcpListener::bind(addr).expect(format!("cannot listen on {}", addr).as_str());
+    println!("listening on http://{}", addr);
 
     for stream in listener.incoming() {
         match stream {
@@ -26,7 +28,7 @@ fn main() {
 
 fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
     let mut buf = [0; 4096];
-    stream.read(&mut buf).unwrap();
+    stream.read(&mut buf)?;
     let mut headers = [httparse::EMPTY_HEADER; 64];
     let mut req = httparse::Request::new(&mut headers);
     req.parse(&mut buf).expect("cannot parse request");
