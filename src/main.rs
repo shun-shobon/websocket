@@ -3,8 +3,7 @@ use std::net::{TcpListener, TcpStream};
 use std::str;
 use std::thread;
 
-use crypto::digest::Digest;
-use crypto::sha1::Sha1;
+use sha1::Sha1;
 
 const HASH_KEY: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -58,10 +57,8 @@ fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
             let joined_token = format!("{}{}", str::from_utf8(token_bytes).unwrap(), HASH_KEY);
 
             let mut hasher = Sha1::new();
-            hasher.input(joined_token.as_bytes());
-            let sha1_string = hasher.result_str();
-            let bytes = hex::decode(sha1_string).unwrap();
-            let sha1_base64 = base64::encode(bytes);
+            hasher.update(joined_token.as_bytes());
+            let sha1_base64 = base64::encode(hasher.digest().bytes());
 
             let data = format!("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: {}\r\nSec-WebSocket-Protocol: chat\r\n\r\n", sha1_base64);
 
