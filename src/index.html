@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rust web socket</title>
+    <script type="application/javascript">
+      const ws = new WebSocket("ws://localhost:8080/websocket", ["chat"]);
+      ws.addEventListener("open", () => {
+        console.log(ws);
+        ws.send("test");
+      });
+      ws.addEventListener("message", (message) => console.log(message));
+    </script>
+  </head>
+  <body>
+    Hello, world!
+  </body>
+</html>
