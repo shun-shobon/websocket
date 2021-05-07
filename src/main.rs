@@ -16,16 +16,14 @@ fn main() {
 
     println!("listening on http://{}", addr);
 
-    for stream in listener.incoming() {
-        if let Ok(s) = stream {
-            thread::spawn(move || {
-                handle_client(&s).unwrap();
-            });
-        }
+    for stream in listener.incoming().flatten() {
+        thread::spawn(|| {
+            handle_client(stream).unwrap();
+        });
     }
 }
 
-fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
+fn handle_client(mut stream: TcpStream) -> Result<(), Error> {
     let mut buf = [0; 4096];
     stream.read(&mut buf)?;
 
@@ -42,8 +40,8 @@ fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
                 include_str!("./index.html")
             );
 
-            stream.write(data.as_bytes())?;
-            return Ok(());
+            stream.write_all(data.as_bytes())?;
+            Ok(())
         }
 
         "/websocket" => {
@@ -66,7 +64,7 @@ fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
             println!("{}", data);
             println!("=================================");
 
-            stream.write(data.as_bytes())?;
+            stream.write_all(data.as_bytes())?;
 
             let mut msg_buf = [0; 1024];
             while stream.read(&mut msg_buf).is_ok() {
@@ -84,11 +82,11 @@ fn handle_client(mut stream: &TcpStream) -> Result<(), Error> {
                     let payload = String::from_utf8(payload_raw).unwrap();
                     println!("{}", payload);
 
-                    stream.write(&[129, 5, 72, 101, 108, 108, 111])?;
+                    stream.write_all(&[129, 5, 72, 101, 108, 108, 111])?;
                 }
             }
 
-            return Ok(());
+            Ok(())
         }
         _ => Ok(()),
     }
